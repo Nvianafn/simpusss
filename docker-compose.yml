@@ -32,6 +32,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=secret
       - APP_KEY=base64:e8YVheKyqHGGJJ/DG1O2nefb1M1PbuSLlZBnQ7rL8U4=
+      - CACHE_STORE=file
     depends_on:
       - auth-db
     networks:
@@ -79,6 +80,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=secret
       - APP_KEY=base64:Tkdu6c/QioK0Y5zC775m4aTIsfCwehIP6ww0XotXboE=
+      - CACHE_STORE=file
       - INTERNAL_API_TOKEN=simpus-internal-dev-token
     depends_on:
       - mahasiswa-db
@@ -127,6 +129,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=secret
       - APP_KEY=base64:rkLXS6xiYYXEnS+sD9HsGQPmTeuOs80Wbj2IAl7fngw=
+      - CACHE_STORE=file
       - INTERNAL_API_TOKEN=simpus-internal-dev-token
       - MAHASISWA_SERVICE_URL=http://mahasiswa-nginx
       - KLINIK_SERVICE_URL=http://klinik-nginx
@@ -178,6 +181,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=secret
       - APP_KEY=base64:9s9OHjpa9H6fJJXgmdoXhRjBGHUMvDTg+7fkVDgSR0c=
+      - CACHE_STORE=file
       - INTERNAL_API_TOKEN=simpus-internal-dev-token
     depends_on:
       - klinik-db
@@ -226,6 +230,7 @@ services:
       - DB_USERNAME=root
       - DB_PASSWORD=secret
       - APP_KEY=base64:1GU+XBxBlUffJRJ7xNtHzBxvGDjg8AlvjRNWV2xX+rQ=
+      - CACHE_STORE=file
       - INTERNAL_API_TOKEN=simpus-internal-dev-token
     depends_on:
       - bank-db
