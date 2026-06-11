@@ -20,13 +20,13 @@ Content-Type: application/json
 Accept: application/json
 ```
 
-- Header wajib untuk endpoint mutasi internal Mahasiswa, Bank, Klinik, dan PPL:
+- Header wajib untuk semua endpoint Mahasiswa, Bank, Klinik, dan PPL:
 
 ```http
 X-Internal-Token: <INTERNAL_API_TOKEN>
 ```
 
-Endpoint mutasi internal adalah `POST`, `PUT`, dan `DELETE` pada service Mahasiswa, Bank, Klinik, dan PPL. Endpoint `GET` tetap publik untuk kebutuhan read/status antar-service.
+Semua route API pada service Mahasiswa, Bank, Klinik, dan PPL berada di dalam middleware `VerifyInternalToken`, termasuk endpoint `GET`. Tanpa header ini, service harus mengembalikan `401 Unauthorized`. Frontend tidak boleh memanggil service-service ini langsung dari browser dengan token internal bocor; panggilan sebaiknya diproxy oleh backend/frontend server-side client yang menyimpan token di environment.
 
 - Status code umum:
   - `200 OK`: request sukses.

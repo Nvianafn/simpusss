@@ -77,6 +77,12 @@ for svc in auth-app mahasiswa-app klinik-app bank-app ppl-app frontend-app-php; 
 done
 ```
 
+Jika app/PHP-FPM container direcreate, restart Nginx container sebelum smoke test HTTP agar upstream tidak stale:
+
+```bash
+docker compose -f docker-compose.vps.yml restart auth-nginx mahasiswa-nginx ppl-nginx klinik-nginx bank-nginx frontend-nginx
+```
+
 ## Catatan batasan
 
 - Profile ini dibuat untuk demo/MVP, bukan high-traffic production.
