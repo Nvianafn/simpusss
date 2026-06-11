@@ -1,0 +1,3 @@
+<?php
+declare(strict_types=1);
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('pendaftaran_ppl', function(Blueprint $table): void { $table->id(); $table->string('nim')->index(); $table->string('lokasi_ppl'); $table->string('tahun_ajaran')->index(); $table->date('tanggal_daftar')->index(); $table->enum('status_pendaftaran',['pending','disetujui','ditolak'])->default('pending')->index(); $table->text('catatan')->nullable(); $table->timestamps(); $table->unique(['nim','tahun_ajaran']); }); } public function down(): void { Schema::dropIfExists('pendaftaran_ppl'); } };

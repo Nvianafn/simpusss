@@ -1,0 +1,297 @@
+networks:
+  simpus-network:
+    driver: bridge
+
+services:
+  # Auth Service
+  auth-nginx:
+    image: nginx:stable-alpine
+    container_name: auth-nginx
+    ports:
+      - "8000:80" # Port for Auth Service
+    volumes:
+      - ./auth-service:/var/www/html
+      - ./nginx/conf.d/auth.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - auth-app
+    networks:
+      - simpus-network
+
+  auth-app:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    container_name: auth-app
+    volumes:
+      - ./auth-service:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=auth-db
+      - DB_PORT=3306
+      - DB_DATABASE=auth_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - APP_KEY=base64:e8YVheKyqHGGJJ/DG1O2nefb1M1PbuSLlZBnQ7rL8U4=
+    depends_on:
+      - auth-db
+    networks:
+      - simpus-network
+
+  auth-db:
+    image: mysql:8.0
+    container_name: auth-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: auth_db
+    volumes:
+      - auth_db_data:/var/lib/mysql
+    ports:
+      - "33061:3306"
+    networks:
+      - simpus-network
+
+  # Mahasiswa Service
+  mahasiswa-nginx:
+    image: nginx:stable-alpine
+    container_name: mahasiswa-nginx
+    ports:
+      - "8001:80" # Port for Mahasiswa Service
+    volumes:
+      - ./mahasiswa-service:/var/www/html
+      - ./nginx/conf.d/mahasiswa.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - mahasiswa-app
+    networks:
+      - simpus-network
+
+  mahasiswa-app:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    container_name: mahasiswa-app
+    volumes:
+      - ./mahasiswa-service:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=mahasiswa-db
+      - DB_PORT=3306
+      - DB_DATABASE=mahasiswa_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - APP_KEY=base64:Tkdu6c/QioK0Y5zC775m4aTIsfCwehIP6ww0XotXboE=
+      - INTERNAL_API_TOKEN=simpus-internal-dev-token
+    depends_on:
+      - mahasiswa-db
+    networks:
+      - simpus-network
+
+  mahasiswa-db:
+    image: mysql:8.0
+    container_name: mahasiswa-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: mahasiswa_db
+    volumes:
+      - mahasiswa_db_data:/var/lib/mysql
+    ports:
+      - "33062:3306"
+    networks:
+      - simpus-network
+
+  # PPL Service
+  ppl-nginx:
+    image: nginx:stable-alpine
+    container_name: ppl-nginx
+    ports:
+      - "8002:80" # Port for PPL Service
+    volumes:
+      - ./ppl-service:/var/www/html
+      - ./nginx/conf.d/ppl.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - ppl-app
+    networks:
+      - simpus-network
+
+  ppl-app:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    container_name: ppl-app
+    volumes:
+      - ./ppl-service:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=ppl-db
+      - DB_PORT=3306
+      - DB_DATABASE=ppl_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - APP_KEY=base64:rkLXS6xiYYXEnS+sD9HsGQPmTeuOs80Wbj2IAl7fngw=
+      - INTERNAL_API_TOKEN=simpus-internal-dev-token
+      - MAHASISWA_SERVICE_URL=http://mahasiswa-nginx
+      - KLINIK_SERVICE_URL=http://klinik-nginx
+      - BANK_SERVICE_URL=http://bank-nginx
+    depends_on:
+      - ppl-db
+    networks:
+      - simpus-network
+
+  ppl-db:
+    image: mysql:8.0
+    container_name: ppl-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: ppl_db
+    volumes:
+      - ppl_db_data:/var/lib/mysql
+    ports:
+      - "33066:3306"
+    networks:
+      - simpus-network
+
+  # Klinik Service
+  klinik-nginx:
+    image: nginx:stable-alpine
+    container_name: klinik-nginx
+    ports:
+      - "8003:80" # Port for Klinik Service
+    volumes:
+      - ./klinik-service:/var/www/html
+      - ./nginx/conf.d/klinik.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - klinik-app
+    networks:
+      - simpus-network
+
+  klinik-app:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    container_name: klinik-app
+    volumes:
+      - ./klinik-service:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=klinik-db
+      - DB_PORT=3306
+      - DB_DATABASE=klinik_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - APP_KEY=base64:9s9OHjpa9H6fJJXgmdoXhRjBGHUMvDTg+7fkVDgSR0c=
+      - INTERNAL_API_TOKEN=simpus-internal-dev-token
+    depends_on:
+      - klinik-db
+    networks:
+      - simpus-network
+
+  klinik-db:
+    image: mysql:8.0
+    container_name: klinik-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: klinik_db
+    volumes:
+      - klinik_db_data:/var/lib/mysql
+    ports:
+      - "33063:3306"
+    networks:
+      - simpus-network
+
+  # Bank Service
+  bank-nginx:
+    image: nginx:stable-alpine
+    container_name: bank-nginx
+    ports:
+      - "8004:80" # Port for Bank Service
+    volumes:
+      - ./bank-service:/var/www/html
+      - ./nginx/conf.d/bank.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - bank-app
+    networks:
+      - simpus-network
+
+  bank-app:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    container_name: bank-app
+    volumes:
+      - ./bank-service:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=bank-db
+      - DB_PORT=3306
+      - DB_DATABASE=bank_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - APP_KEY=base64:1GU+XBxBlUffJRJ7xNtHzBxvGDjg8AlvjRNWV2xX+rQ=
+      - INTERNAL_API_TOKEN=simpus-internal-dev-token
+    depends_on:
+      - bank-db
+    networks:
+      - simpus-network
+
+  bank-db:
+    image: mysql:8.0
+    container_name: bank-db
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: bank_db
+    volumes:
+      - bank_db_data:/var/lib/mysql
+    ports:
+      - "33064:3306"
+    networks:
+      - simpus-network
+
+  # Frontend App (Livewire)
+  frontend-nginx:
+    image: nginx:stable-alpine
+    container_name: frontend-nginx
+    ports:
+      - "8080:80" # Port for Frontend App
+    volumes:
+      - ./frontend-app:/var/www/html
+      - ./nginx/conf.d/frontend.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - frontend-app-php
+    networks:
+      - simpus-network
+
+  frontend-app-php:
+    build:
+      context: ./docker/php-fpm
+      dockerfile: Dockerfile
+    container_name: frontend-app-php
+    volumes:
+      - ./frontend-app:/var/www/html
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=auth-db # Frontend might connect to auth_db for user data, or use API
+      - DB_PORT=3306
+      - DB_DATABASE=auth_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - APP_KEY=base64:JCbDLd+A7uUDPV3+Vkue943GuHaaNPIhbnsp+ogOimU=
+      - CACHE_STORE=file
+      - AUTH_SERVICE_URL=http://auth-nginx
+      - MAHASISWA_SERVICE_URL=http://mahasiswa-nginx
+      - PPL_SERVICE_URL=http://ppl-nginx
+      - KLINIK_SERVICE_URL=http://klinik-nginx
+      - BANK_SERVICE_URL=http://bank-nginx
+      - INTERNAL_API_TOKEN=simpus-internal-dev-token
+    networks:
+      - simpus-network
+
+volumes:
+  auth_db_data:
+    driver: local
+  mahasiswa_db_data:
+    driver: local
+  ppl_db_data:
+    driver: local
+  klinik_db_data:
+    driver: local
+  bank_db_data:
+    driver: local

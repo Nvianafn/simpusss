@@ -1,0 +1,210 @@
+networks:
+  simpus-network:
+    driver: bridge
+
+x-app-common: &app_common
+  build:
+    context: ./docker/php-fpm
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  mem_limit: 192m
+  networks:
+    - simpus-network
+  depends_on:
+    simpus-db:
+      condition: service_healthy
+
+x-nginx-common: &nginx_common
+  image: nginx:stable-alpine
+  restart: unless-stopped
+  mem_limit: 48m
+  networks:
+    - simpus-network
+
+x-db-env: &db_env
+  DB_CONNECTION: mysql
+  DB_HOST: simpus-db
+  DB_PORT: 3306
+  DB_USERNAME: root
+  DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+
+services:
+  simpus-db:
+    image: mysql:8.0
+    container_name: simpus-db
+    restart: unless-stopped
+    mem_limit: 512m
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+    command: ["--defaults-extra-file=/etc/mysql/conf.d/low-memory.cnf"]
+    volumes:
+      - simpus_mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+      - ./docker/mysql/conf.d/low-memory.cnf:/etc/mysql/conf.d/low-memory.cnf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - simpus-network
+
+  auth-nginx:
+    <<: *nginx_common
+    container_name: auth-nginx
+    volumes:
+      - ./auth-service:/var/www/html:ro
+      - ./nginx/conf.d/auth.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - auth-app
+
+  auth-app:
+    <<: *app_common
+    container_name: auth-app
+    volumes:
+      - ./auth-service:/var/www/html
+    environment:
+      <<: *db_env
+      DB_DATABASE: auth_db
+      APP_KEY: base64:e8YVheKyqHGGJJ/DG1O2nefb1M1PbuSLlZBnQ7rL8U4=
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+
+  mahasiswa-nginx:
+    <<: *nginx_common
+    container_name: mahasiswa-nginx
+    volumes:
+      - ./mahasiswa-service:/var/www/html:ro
+      - ./nginx/conf.d/mahasiswa.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - mahasiswa-app
+
+  mahasiswa-app:
+    <<: *app_common
+    container_name: mahasiswa-app
+    volumes:
+      - ./mahasiswa-service:/var/www/html
+    environment:
+      <<: *db_env
+      DB_DATABASE: mahasiswa_db
+      APP_KEY: base64:Tkdu6c/QioK0Y5zC775m4aTIsfCwehIP6ww0XotXboE=
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-simpus-internal-dev-token}
+
+  ppl-nginx:
+    <<: *nginx_common
+    container_name: ppl-nginx
+    volumes:
+      - ./ppl-service:/var/www/html:ro
+      - ./nginx/conf.d/ppl.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - ppl-app
+
+  ppl-app:
+    <<: *app_common
+    container_name: ppl-app
+    volumes:
+      - ./ppl-service:/var/www/html
+    environment:
+      <<: *db_env
+      DB_DATABASE: ppl_db
+      APP_KEY: base64:rkLXS6xiYYXEnS+sD9HsGQPmTeuOs80Wbj2IAl7fngw=
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-simpus-internal-dev-token}
+      MAHASISWA_SERVICE_URL: http://mahasiswa-nginx
+      KLINIK_SERVICE_URL: http://klinik-nginx
+      BANK_SERVICE_URL: http://bank-nginx
+
+  klinik-nginx:
+    <<: *nginx_common
+    container_name: klinik-nginx
+    volumes:
+      - ./klinik-service:/var/www/html:ro
+      - ./nginx/conf.d/klinik.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - klinik-app
+
+  klinik-app:
+    <<: *app_common
+    container_name: klinik-app
+    volumes:
+      - ./klinik-service:/var/www/html
+    environment:
+      <<: *db_env
+      DB_DATABASE: klinik_db
+      APP_KEY: base64:9s9OHjpa9H6fJJXgmdoXhRjBGHUMvDTg+7fkVDgSR0c=
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-simpus-internal-dev-token}
+
+  bank-nginx:
+    <<: *nginx_common
+    container_name: bank-nginx
+    volumes:
+      - ./bank-service:/var/www/html:ro
+      - ./nginx/conf.d/bank.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - bank-app
+
+  bank-app:
+    <<: *app_common
+    container_name: bank-app
+    volumes:
+      - ./bank-service:/var/www/html
+    environment:
+      <<: *db_env
+      DB_DATABASE: bank_db
+      APP_KEY: base64:1GU+XBxBlUffJRJ7xNtHzBxvGDjg8AlvjRNWV2xX+rQ=
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-simpus-internal-dev-token}
+
+  frontend-nginx:
+    <<: *nginx_common
+    container_name: frontend-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend-app:/var/www/html:ro
+      - ./nginx/conf.d/frontend.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend-app-php
+
+  frontend-app-php:
+    <<: *app_common
+    container_name: frontend-app-php
+    volumes:
+      - ./frontend-app:/var/www/html
+    environment:
+      <<: *db_env
+      DB_DATABASE: auth_db
+      APP_KEY: base64:JCbDLd+A7uUDPV3+Vkue943GuHaaNPIhbnsp+ogOimU=
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      AUTH_SERVICE_URL: http://auth-nginx
+      MAHASISWA_SERVICE_URL: http://mahasiswa-nginx
+      PPL_SERVICE_URL: http://ppl-nginx
+      KLINIK_SERVICE_URL: http://klinik-nginx
+      BANK_SERVICE_URL: http://bank-nginx
+      INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-simpus-internal-dev-token}
+
+volumes:
+  simpus_mysql_data:
+    driver: local

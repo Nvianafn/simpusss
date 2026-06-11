@@ -1,0 +1,3 @@
+<?php
+declare(strict_types=1);
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema; return new class extends Migration { public function up(): void { Schema::create('hasil_kesehatan', function(Blueprint $table): void { $table->id(); $table->string('nim')->index(); $table->date('tanggal_cek')->index(); $table->unsignedSmallInteger('tinggi_badan'); $table->unsignedSmallInteger('berat_badan'); $table->string('tekanan_darah'); $table->text('hasil_pemeriksaan'); $table->enum('status_kesehatan',['layak','tidak_layak'])->index(); $table->timestamps(); }); } public function down(): void { Schema::dropIfExists('hasil_kesehatan'); } };
