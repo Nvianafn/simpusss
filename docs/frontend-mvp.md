@@ -13,17 +13,30 @@ Frontend Laravel/Blade berperan sebagai server-side integration layer.
 
 ## Route Utama
 
-Public:
+Public/Auth:
 
-- `GET /` — dashboard ringkas status service/data.
+- `GET /` — entry dashboard; redirect sesuai role jika sudah login.
+- `GET /dashboard` — dashboard mahasiswa untuk role `mahasiswa`.
 - `GET /login` — form login.
 - `POST /login` — login via Auth Service.
 - `POST /logout` — hapus session frontend.
 
-Portal mahasiswa:
+Portal layanan untuk mahasiswa:
 
-- `GET /portal` — portal status mahasiswa/PPL.
+- `GET /portal` — redirect legacy ke Portal PPL.
+- `GET /portal/mahasiswa` — administrasi data mahasiswa.
+- `GET /portal/klinik` — status dan riwayat kesehatan mahasiswa.
+- `GET /portal/bank` — tagihan dan status pembayaran mahasiswa.
+- `GET /portal/ppl` — checklist syarat dan pendaftaran PPL.
 - `POST /portal/ppl-daftar` — daftar PPL.
+
+Admin dashboard:
+
+- `GET /admin/dashboard` — dashboard global super admin.
+- `GET /admin/mahasiswa/dashboard`
+- `GET /admin/klinik/dashboard`
+- `GET /admin/bank/dashboard`
+- `GET /admin/ppl/dashboard`
 
 Admin PPL:
 
@@ -54,11 +67,12 @@ Admin Pembayaran:
 
 Route frontend memakai middleware `simpus.role`.
 
-- `mahasiswa` dan `super_admin`: portal mahasiswa.
-- `admin_ppl` dan `super_admin`: admin PPL.
-- `admin_mahasiswa` dan `super_admin`: admin Mahasiswa.
-- `admin_klinik` dan `super_admin`: admin Klinik.
-- `admin_bank` dan `super_admin`: admin Pembayaran.
+- `mahasiswa` dan `super_admin`: portal mahasiswa/klinik/bank/PPL untuk mahasiswa.
+- `super_admin`: dashboard global dan semua dashboard/admin service.
+- `admin_ppl` dan `super_admin`: dashboard/admin PPL.
+- `admin_mahasiswa` dan `super_admin`: dashboard/admin Mahasiswa.
+- `admin_klinik` dan `super_admin`: dashboard/admin Klinik.
+- `admin_bank` dan `super_admin`: dashboard Bank dan admin Pembayaran.
 
 Navbar layout juga menyembunyikan menu yang tidak sesuai role. Ini hanya UX; proteksi utama tetap middleware route.
 
@@ -116,5 +130,5 @@ Mode:
 ## Batasan Saat Ini
 
 - Desain UI final belum dikerjakan di sini karena sedang dikerjakan terpisah.
-- Dashboard, login, dan portal belum sepenuhnya disatukan ke layout baru.
-- Script smoke frontend saat ini fokus pada proteksi dasar, validasi negatif pembayaran, dan flow buat/konfirmasi tagihan.
+- Desain visual final masih placeholder; layout dan screen sudah dipisah sesuai sitemap multi-portal/multi-dashboard.
+- Script smoke frontend saat ini fokus pada proteksi dasar, validasi negatif pembayaran, dan flow buat/konfirmasi tagihan. Belum mencakup seluruh kombinasi role salah per halaman.

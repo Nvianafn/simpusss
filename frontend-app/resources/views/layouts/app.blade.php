@@ -69,19 +69,27 @@
                 <a @class(['active' => request()->routeIs('dashboard')]) href="{{ route('dashboard') }}">Dashboard</a>
                 @if (session('simpus_token'))
                     @if ($canAccess(['mahasiswa']))
-                        <a @class(['active' => request()->routeIs('portal')]) href="{{ route('portal') }}">Portal</a>
+                        <a @class(['active' => request()->routeIs('mahasiswa.dashboard') || request()->routeIs('dashboard')]) href="{{ route('mahasiswa.dashboard') }}">Dashboard Mhs</a>
+                        <a @class(['active' => request()->routeIs('portal.mahasiswa')]) href="{{ route('portal.mahasiswa') }}">Portal Mahasiswa</a>
+                        <a @class(['active' => request()->routeIs('portal.klinik')]) href="{{ route('portal.klinik') }}">Portal Klinik</a>
+                        <a @class(['active' => request()->routeIs('portal.bank')]) href="{{ route('portal.bank') }}">Portal Bank</a>
+                        <a @class(['active' => request()->routeIs('portal.ppl')]) href="{{ route('portal.ppl') }}">Portal PPL</a>
                     @endif
                     @if ($canAccess(['admin_mahasiswa']))
-                        <a @class(['active' => request()->routeIs('admin.mahasiswa')]) href="{{ route('admin.mahasiswa') }}">Mahasiswa</a>
+                        <a @class(['active' => request()->routeIs('admin.mahasiswa.dashboard')]) href="{{ route('admin.mahasiswa.dashboard') }}">Dash Mahasiswa</a>
+                        <a @class(['active' => request()->routeIs('admin.mahasiswa')]) href="{{ route('admin.mahasiswa') }}">Admin Mahasiswa</a>
                     @endif
                     @if ($canAccess(['admin_klinik']))
-                        <a @class(['active' => request()->routeIs('admin.klinik')]) href="{{ route('admin.klinik') }}">Klinik</a>
+                        <a @class(['active' => request()->routeIs('admin.klinik.dashboard')]) href="{{ route('admin.klinik.dashboard') }}">Dash Klinik</a>
+                        <a @class(['active' => request()->routeIs('admin.klinik')]) href="{{ route('admin.klinik') }}">Admin Klinik</a>
                     @endif
                     @if ($canAccess(['admin_bank']))
-                        <a @class(['active' => request()->routeIs('admin.pembayaran')]) href="{{ route('admin.pembayaran') }}">Pembayaran</a>
+                        <a @class(['active' => request()->routeIs('admin.bank.dashboard')]) href="{{ route('admin.bank.dashboard') }}">Dash Bank</a>
+                        <a @class(['active' => request()->routeIs('admin.pembayaran')]) href="{{ route('admin.pembayaran') }}">Admin Pembayaran</a>
                     @endif
                     @if ($canAccess(['admin_ppl']))
-                        <a @class(['active' => request()->routeIs('admin.ppl')]) href="{{ route('admin.ppl') }}">PPL</a>
+                        <a @class(['active' => request()->routeIs('admin.ppl.dashboard')]) href="{{ route('admin.ppl.dashboard') }}">Dash PPL</a>
+                        <a @class(['active' => request()->routeIs('admin.ppl')]) href="{{ route('admin.ppl') }}">Admin PPL</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">@csrf <button type="submit">Logout</button></form>
                 @else

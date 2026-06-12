@@ -48,7 +48,7 @@ class PplRegistrationController extends Controller
         }
 
         return redirect()
-            ->route('portal', ['nim' => $data['nim']])
+            ->route('portal.ppl', ['nim' => $data['nim']])
             ->with('success', "Pendaftaran PPL berhasil dibuat ({$statusCode}). Status awal: pending.");
     }
 }
