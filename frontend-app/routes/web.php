@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AdminKlinikController;
+use App\Http\Controllers\AdminMahasiswaController;
 use App\Http\Controllers\AdminPembayaranController;
 use App\Http\Controllers\AdminPplController;
 use App\Http\Controllers\AuthSessionController;
@@ -24,7 +26,21 @@ Route::middleware('simpus.role:super_admin,admin_ppl')->prefix('admin')->name('a
     Route::post('/ppl/{id}/reject', [AdminPplController::class, 'reject'])->whereNumber('id')->name('ppl.reject');
 });
 
+Route::middleware('simpus.role:super_admin,admin_mahasiswa')->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('/mahasiswa', [AdminMahasiswaController::class, 'index'])->name('mahasiswa');
+    Route::post('/mahasiswa', [AdminMahasiswaController::class, 'store'])->name('mahasiswa.store');
+    Route::put('/mahasiswa/{nim}', [AdminMahasiswaController::class, 'update'])->name('mahasiswa.update');
+    Route::delete('/mahasiswa/{nim}', [AdminMahasiswaController::class, 'destroy'])->name('mahasiswa.destroy');
+});
+
+Route::middleware('simpus.role:super_admin,admin_klinik')->prefix('admin')->name('admin.')->group(function (): void {
+    Route::get('/klinik', [AdminKlinikController::class, 'index'])->name('klinik');
+    Route::post('/klinik', [AdminKlinikController::class, 'store'])->name('klinik.store');
+    Route::put('/klinik/{id}', [AdminKlinikController::class, 'update'])->whereNumber('id')->name('klinik.update');
+});
+
 Route::middleware('simpus.role:super_admin,admin_bank')->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/pembayaran', [AdminPembayaranController::class, 'index'])->name('pembayaran');
+    Route::post('/pembayaran', [AdminPembayaranController::class, 'store'])->name('pembayaran.store');
     Route::post('/pembayaran/{id}/konfirmasi', [AdminPembayaranController::class, 'confirm'])->whereNumber('id')->name('pembayaran.konfirmasi');
 });

@@ -36,6 +36,29 @@ class AdminPembayaranController extends Controller
         ]);
     }
 
+    public function store(Request $request, SimpusApiClient $client): RedirectResponse
+    {
+        $data = $request->validate([
+            'nim' => ['required', 'string', 'max:32'],
+            'kode_tagihan' => ['required', 'string', 'max:255'],
+            'jenis_pembayaran' => ['required', 'string', 'max:255'],
+            'nominal' => ['required', 'numeric', 'min:0'],
+            'jatuh_tempo' => ['nullable', 'date'],
+        ]);
+
+        $response = $client->createPembayaran(array_filter($data, fn ($value) => $value !== null && $value !== ''));
+
+        if (data_get($response, '_meta.ok') !== true) {
+            return back()
+                ->withErrors(['pembayaran' => data_get($response, 'message', 'Gagal membuat tagihan.')])
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('admin.pembayaran', ['nim' => $data['nim'], 'status_pembayaran' => 'belum_bayar'])
+            ->with('success', data_get($response, 'message', 'Tagihan dibuat.'));
+    }
+
     public function confirm(Request $request, SimpusApiClient $client, int $id): RedirectResponse
     {
         $data = $request->validate([
