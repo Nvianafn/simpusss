@@ -51,6 +51,9 @@ login_admin() {
     --data-urlencode "email=$ADMIN_EMAIL" \
     --data-urlencode "password=$ADMIN_PASSWORD")"
   [[ "$code" == "302" ]] || fail "login admin expected 302, got $code"
+
+  code="$(curl -sS -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$BASE_URL/admin/pembayaran")"
+  [[ "$code" == "200" ]] || fail "login admin did not reach protected page; expected /admin/pembayaran 200, got $code"
   pass "login_admin"
 }
 
@@ -122,6 +125,47 @@ create_and_confirm_payment() {
   pass "confirm_tagihan_frontend"
 }
 
+assert_auth_route() {
+  local path="$1"
+  local label="$2"
+  local code
+  code="$(curl -sSL -b "$COOKIE_JAR" -c "$COOKIE_JAR" -o /dev/null -w '%{http_code}' "$BASE_URL$path")"
+  [[ "$code" == "200" ]] || fail "$label expected final 200, got $code"
+  pass "$label"
+}
+
+assert_redirect_route() {
+  local path="$1"
+  local label="$2"
+  local expected_location="$3"
+  local headers
+  headers="$(mktemp)"
+  local code
+  code="$(curl -sS -b "$COOKIE_JAR" -c "$COOKIE_JAR" -D "$headers" -o /dev/null -w '%{http_code}' "$BASE_URL$path")"
+  [[ "$code" == "302" ]] || { rm -f "$headers"; fail "$label expected 302, got $code"; }
+  grep -q "[Ll]ocation: .*${expected_location}" "$headers" || { cat "$headers" >&2; rm -f "$headers"; fail "$label expected redirect to $expected_location"; }
+  rm -f "$headers"
+  pass "$label"
+}
+
+navigation_checks() {
+  login_admin
+
+  assert_auth_route "/dashboard" "route_dashboard"
+  assert_auth_route "/portal/mahasiswa" "route_portal_mahasiswa"
+  assert_auth_route "/portal/klinik" "route_portal_klinik"
+  assert_auth_route "/portal/bank" "route_portal_bank"
+  assert_auth_route "/portal/ppl" "route_portal_ppl"
+
+  assert_auth_route "/admin/dashboard" "route_admin_dashboard"
+  assert_auth_route "/admin/mahasiswa/dashboard" "route_admin_mahasiswa_dashboard"
+  assert_auth_route "/admin/klinik/dashboard" "route_admin_klinik_dashboard"
+  assert_auth_route "/admin/bank/dashboard" "route_admin_bank_dashboard"
+  assert_auth_route "/admin/ppl/dashboard" "route_admin_ppl_dashboard"
+
+  assert_redirect_route "/portal" "legacy_portal_redirect" "/portal/ppl"
+}
+
 cleanup_dummy() {
   docker compose -f "$PROJECT_DIR/docker-compose.yml" exec -T bank-db sh -lc \
     "mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" \"\$MYSQL_DATABASE\" -e \"DELETE FROM pembayaran WHERE nim='${NIM}' OR kode_tagihan='${KODE_TAGIHAN}';\"" >/dev/null 2>&1 || true
@@ -131,10 +175,11 @@ cleanup_dummy() {
 main() {
   case "${1:-all}" in
     negative) negative_checks ;;
+    navigation) navigation_checks ;;
     payment) trap 'cleanup_dummy; cleanup_files' EXIT; create_and_confirm_payment ;;
-    all) trap 'cleanup_dummy; cleanup_files' EXIT; negative_checks; create_and_confirm_payment ;;
+    all) trap 'cleanup_dummy; cleanup_files' EXIT; negative_checks; navigation_checks; create_and_confirm_payment ;;
     cleanup) cleanup_dummy ;;
-    *) fail "Usage: $0 [all|negative|payment|cleanup]" ;;
+    *) fail "Usage: $0 [all|negative|navigation|payment|cleanup]" ;;
   esac
 }
 
